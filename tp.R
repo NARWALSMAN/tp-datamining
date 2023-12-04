@@ -54,22 +54,16 @@ precision<-(tableau_confusion[1,1]+tableau_confusion[2,2]+tableau_confusion[3,3]
 tauxerreur
 precision
 #QUESTION 3  Programmer une fonction 
-fait_un_test<-function(donnertrain,donnertest,classetrain,classetest,k){
-  #creer un test de knn et test avec une matrice de confusion la precision
-  #entrée: donnertrain :  dataframe  donner de training du modele
-  #        donnertest:    dataframe  donner a tester
-  #        classetrain:   liste      mliste des classe du datatrain
-  #        classetest:    liste      liste des classe du donnertest
-  #        k: integer     k          voisin 
-  #sortie: precision:     intezger   renvooi la precision calculer du test
-  test_resultat_1<-knn(train = donnertrain, test = donnertest,cl = classetrain,k = k,use.all = FALSE,set.seed(4))
-  tableau_confusion_1<-table(classetest,test_resultat_1)
-  precision_1<-(tableau_confusion_1[1,1]+tableau_confusion_1[2,2]+tableau_confusion_1[3,3])/
-    (tableau_confusion_1[1,2]+tableau_confusion_1[1,3]+tableau_confusion_1[2,3]+
-       tableau_confusion_1[2,1]+tableau_confusion_1[3,1]+tableau_confusion_1[3,2]+
-       tableau_confusion_1[1,1]+tableau_confusion_1[2,2]+tableau_confusion_1[3,3])
-  return(precision_1)
+fait_un_test <- function(donnertrain, donnertest, classetrain, classetest, k) {
+  # Crée un test de knn et teste avec une matrice de confusion la précision
+  test_resultat <- knn(train = donnertrain, test = donnertest, cl = classetrain, k = k, use.all = FALSE)
+  tableau_confusion <- table(classetest, test_resultat)
+  
+  # Calcul de la précision
+  precision <- sum(diag(tableau_confusion)) / sum(tableau_confusion)
+  return(precision)
 }
+
 
 creer_les_donner<-function(data){
   #a partir d'un tableau de donner creer un echantillions aleatoire 
@@ -96,17 +90,19 @@ test_10_k<-function(donner,k){
   #        k        integer     kvoisin
   #sortie: la precision trouver
     donner_ech<-creer_les_donner(donner)
-    donnertrain<-donner_ech[1:length(donner_ech)/2,1:4]
-    classtrain<-donner_ech[1:length(donner_ech)/2,5]
-    donnertest<-donner_ech[(length(donner_ech)/2):length(donner_ech),1:4]
-    classtest<-donner_ech[(length(donner_ech)/2):length(donner_ech),5]
+    donner_ech<-donner_ech[sample(nrow(donner_ech)), ]
+    donnertrain<-donner_ech[1:nrow(donner_ech)/2,1:4]
+    classtrain<-donner_ech[1:nrow(donner_ech)/2,5]
+    donnertest<-donner_ech[(nrow(donner_ech)/2):nrow(donner_ech),1:4]
+    classtest<-donner_ech[(nrow(donner_ech)/2):nrow(donner_ech),5]
     prec<-fait_un_test(donnertrain,donnertest,classtrain,classtest,k)
   for (i in 2:10){
     donner_ech<-creer_les_donner(donner)
-    donnertrain<-donner_ech[1:length(donner_ech)/2,1:4]
-    classtrain<-donner_ech[1:length(donner_ech)/2,5]
-    donnertest<-donner_ech[(length(donner_ech)/2):length(donner_ech),1:4]
-    classtest<-donner_ech[(length(donner_ech)/2):length(donner_ech),5]
+    donner_ech<-donner_ech[sample(nrow(donner_ech)), ]
+    donnertrain<-donner_ech[1:nrow(donner_ech)/2,1:4]
+    classtrain<-donner_ech[1:nrow(donner_ech)/2,5]
+    donnertest<-donner_ech[(nrow(donner_ech)/2):nrow(donner_ech),1:4]
+    classtest<-donner_ech[(nrow(donner_ech)/2):nrow(donner_ech),5]
     newprec<-fait_un_test(donnertrain,donnertest,classtrain,classtest,k)
     if(newprec>=prec){prec<-newprec}
   }
@@ -129,14 +125,59 @@ trouve_k_opt<-function(data,listek){
   return(k_opt)
 }
 
-#test
-liste_k_voisin<-c(3,5,7)
-k_optimale<-test_10_k(data_iris,3)
-k_optimale
-#QUESTION 4  Tester votre fonction sur le jeu entier
 
+#QUESTION 4  Tester votre fonction sur le jeu entier
+liste_k_voisin<-c(3,5,7)
+k_optimale<-trouve_k_opt(data_iris,liste_k_voisin)
+k_optimale
 
 #QUESTION 5  Programmer l’etude de reechantillonnage
+library(class)
+
+etude_reechantillonnage <- function(y, X, ks, N) {
+  n <- length(y)
+  taille_apprentissage <- floor(0.7 * n)
+  
+  set.seed(123) # Pour rendre les résultats reproductibles
+  indices_apprentissage <- matrix(nrow = N, ncol = taille_apprentissage)
+  
+  # Stocker les indices des échantillons d'apprentissage
+  for (i in 1:N) {
+    indices_apprentissage[i,] <- sample(1:n, taille_apprentissage)
+  }
+  
+  resultats <- list()
+  
+  # Boucle sur les N répétitions
+  for (i in 1:N) {
+    indices_test <- setdiff(1:n, indices_apprentissage[i,])
+    
+    X_apprentissage <- X[indices_apprentissage[i,],]
+    y_apprentissage <- y[indices_apprentissage[i,]]
+    
+    X_test <- X[indices_test,]
+    y_test <- y[indices_test]
+    
+    erreurs <- numeric(length(ks))
+    precisions <- numeric(length(ks))
+    
+    for (j in 1:length(ks)) {
+      k <- ks[j]
+      predictions <- knn(X_apprentissage, X_test, y_apprentissage, k = k)
+      mat_confusion <- table(y_test, predictions)
+      erreurs[j] <- 1 - sum(diag(mat_confusion)) / sum(mat_confusion)
+      precisions[j] <- sum(diag(mat_confusion)) / sum(mat_confusion)
+    }
+    
+    k_opt <- ks[which.min(erreurs)]
+    erreur_opt <- min(erreurs)
+    precision_opt <- max(precisions)
+    
+    resultats[[i]] <- list(k_optimal = k_opt, erreur = erreur_opt, precision = precision_opt)
+  }
+  
+  return(resultats)
+}
 
 
 #QUESTION 6  Tester votre programme sur le jeu entier
