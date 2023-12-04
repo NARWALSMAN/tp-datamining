@@ -132,7 +132,6 @@ k_optimale<-trouve_k_opt(data_iris,liste_k_voisin)
 k_optimale
 
 #QUESTION 5  Programmer l’etude de reechantillonnage
-library(class)
 
 etude_reechantillonnage <- function(y, X, ks, N) {
   n <- length(y)
@@ -182,3 +181,15 @@ etude_reechantillonnage <- function(y, X, ks, N) {
 
 #QUESTION 6  Tester votre programme sur le jeu entier
 
+X <- as.matrix(data_iris[, 1:4])  # Convertir les prédicteurs en matrice
+y <- iris[, 5]              # La réponse est la colonne des espèces
+
+# Définir les valeurs de k et le nombre de répétitions
+ks <- c(1, 3, 5, 7, 9, 11)  # Exemple de valeurs de k
+N <- 10                     # Nombre de répétitions
+
+# Appeler la fonction etude_reechantillonnage
+resultats <- etude_reechantillonnage(y, X, ks, N)
+
+# Afficher les résultats
+print(resultats)
