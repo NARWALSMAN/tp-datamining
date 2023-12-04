@@ -4,6 +4,7 @@
 ##################################
 # INITIALISATION
 library(class)
+library(MASS)
 data_iris<-iris
 
 #QUESTION 1  Decrire comment fonctionne cette procedure
@@ -193,3 +194,17 @@ resultats <- etude_reechantillonnage(y, X, ks, N)
 
 # Afficher les résultats
 print(resultats)
+
+#####
+#LDA#
+#####
+
+#QUESTION 1
+ind.train <- c(1:25,51:75,101:125)
+attach(iris)
+res <- lda(formula=Species ~ ., data = iris, prior = c(1,1,1)/3,
+           subset = ind.train)
+respredict <- predict(res, iris[-ind.train, ])
+respredict$class 
+respredict$posterior
+
