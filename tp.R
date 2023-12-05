@@ -182,29 +182,52 @@ etude_reechantillonnage <- function(y, X, ks, N) {
 
 #QUESTION 6  Tester votre programme sur le jeu entier
 
-X <- as.matrix(data_iris[, 1:4])  # Convertir les prédicteurs en matrice
-y <- iris[, 5]              # La réponse est la colonne des espèces
+# Mise à jour des valeurs de k et de N
+ks <- c(3, 5, 7, 9, 11, 13)  # Grille des valeurs de k à tester
+N <- 500                     # Nombre de répétitions pour l'étude de rééchantillonnage
 
-# Définir les valeurs de k et le nombre de répétitions
-ks <- c(1, 3, 5, 7, 9, 11)  # Exemple de valeurs de k
-N <- 10                     # Nombre de répétitions
-
-# Appeler la fonction etude_reechantillonnage
+# Exécution de l'étude de rééchantillonnage
 resultats <- etude_reechantillonnage(y, X, ks, N)
 
-# Afficher les résultats
-print(resultats)
+# Extraction des taux d'erreurs et des précisions à partir des résultats
+error_rates <- sapply(resultats, function(x) x$erreur)  # Taux d'erreur pour chaque répétition
+precisions <- sapply(resultats, function(x) x$precision)  # Précision pour chaque répétition
+k_optimal <- sapply(resultats, function(x) x$k_optimal)  # Valeur optimale de k pour chaque répétition
+
+# Configuration de l'espace de tracé pour afficher deux graphiques côte à côte
+par(mfrow = c(1, 2))
+
+# Tracé des boxplots pour les taux d'erreurs et les précisions
+boxplot(error_rates, main = "Taux d'Erreurs", ylab = "Taux d'Erreur")
+boxplot(precisions, main = "Précisions", ylab = "Précision")
+
+par(mfrow = c(1, 1))
+# Tracé de l'histogramme de la distribution des valeurs optimales de k
+hist(k_optimal, main = "Distribution des Valeurs Optimales de k", xlab = "k", breaks = length(unique(k_optimal)))
+
+# Analyser les résultats et conclure sur l'utilisation de la méthode k-NN
+
+
+
 
 #####
 #LDA#
 #####
 
-#QUESTION 1
+#QUESTION 1 D´ecrire `a quoi correspondent les entrée et sorties
 ind.train <- c(1:25,51:75,101:125)
 attach(iris)
 res <- lda(formula=Species ~ ., data = iris, prior = c(1,1,1)/3,
            subset = ind.train)
 respredict <- predict(res, iris[-ind.train, ])
+
+#formula  = spécifie le model utiliser
+#data     = tableau de donner ici les donner iris
+#prior    = les probabilité de chaque classe ici chaque espèce a la meeme proba 1/3
 respredict$class 
+#donne les classes par ordre de proximité 
 respredict$posterior
+# donne la valeurs pour la proximité
+
+#QUESTION 2 Construire la matrice de confusion associ´ee aux donn´ees “test”
 
