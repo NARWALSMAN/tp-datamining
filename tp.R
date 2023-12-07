@@ -5,6 +5,7 @@
 # INITIALISATION
 library(class)
 library(MASS)
+library(klaR)
 data_iris<-iris
 
 #QUESTION 1  Decrire comment fonctionne cette procedure
@@ -255,4 +256,17 @@ list(confusion_matrix = confusion_matrix,
      precision_setosa = precision_setosa,
      precision_virginica = precision_virginica,
      precision_versicolor = precision_versicolor)
+
+#QUESTION 3
+# Sélection des variables avec greedy.wilks
+disc.forward <- greedy.wilks(Species ~ ., data = iris, niveau = 0.01)
+
+# Exécuter LDA avec les variables sélectionnées
+res.lda <- lda(disc.forward$formula, data = iris)
+
+# Résultats de la sélection de variables
+disc.forward$results
+disc.forward$results[,1]
+
+#QUESTION 4
 
