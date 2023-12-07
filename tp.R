@@ -185,7 +185,9 @@ etude_reechantillonnage <- function(y, X, ks, N) {
 # Mise à jour des valeurs de k et de N
 ks <- c(3, 5, 7, 9, 11, 13)  # Grille des valeurs de k à tester
 N <- 500                     # Nombre de répétitions pour l'étude de rééchantillonnage
-
+data(iris)
+X <- as.matrix(iris[, 1:4])  # Convertir les prédicteurs en matrice
+y <- iris[, 5]              # La réponse est la colonne des espèces
 # Exécution de l'étude de rééchantillonnage
 resultats <- etude_reechantillonnage(y, X, ks, N)
 
@@ -231,17 +233,4 @@ respredict$posterior
 
 #QUESTION 2 Construire la matrice de confusion associee aux donnees “test”
 
-######################pas fini##############################
-set.seed(123)  # Pour la reproductibilité
-index <- sample(1:nrow(data_iris), nrow(data_iris) * 0.7)
-train_data <- data_iris[index, ]
-test_data <- data_iris[-index, ]
-# Exemple avec une régression logistique
-modele_logit <- glm( ~ ., data = train_data, family = "binomial")
-predictions_logit <- predict(modele_logit, test_data, type = "response")
-predictions_logit <- ifelse(predictions_logit > 0.5, 1, 0)  # Si votre classe est binaire
-
-# k-NN
-predictions_knn <- knn(train = train_data[, -ncol(train_data)], test = test_data[, -ncol(test_data)], 
-                       cl = train_data[, ncol(train_data)], k = 5)  # k est un hyperparamètre
 
