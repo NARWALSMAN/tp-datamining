@@ -234,3 +234,25 @@ respredict$posterior
 #QUESTION 2 Construire la matrice de confusion associee aux donnees “test”
 
 
+ind.train <- c(1:25, 51:75, 101:125)
+res.lda <- lda(Species ~ ., data = iris, subset = ind.train)
+predictions <- predict(res.lda, iris[-ind.train, ])
+
+# Créer la matrice de confusion
+confusion_matrix <- table(predictions$class, iris[-ind.train, "Species"])
+
+# Calculer le taux d'erreur
+error_rate <- 1 - sum(diag(confusion_matrix)) / sum(confusion_matrix)
+
+# Calculer la précision pour chaque espèce
+precision_setosa <- confusion_matrix[1, 1] / sum(confusion_matrix[1, ])
+precision_virginica <- confusion_matrix[2, 2] / sum(confusion_matrix[2, ])
+precision_versicolor <- confusion_matrix[3, 3] / sum(confusion_matrix[3, ])
+
+
+list(confusion_matrix = confusion_matrix, 
+     error_rate = error_rate, 
+     precision_setosa = precision_setosa,
+     precision_virginica = precision_virginica,
+     precision_versicolor = precision_versicolor)
+
