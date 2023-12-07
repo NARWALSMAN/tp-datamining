@@ -269,4 +269,12 @@ disc.forward$results
 disc.forward$results[,1]
 
 #QUESTION 4
+selected_vars <- c("Sepal.Length", "Sepal.Width")
+formula <- as.formula(paste("Species ~", paste(selected_vars, collapse = "+")))
 
+# Exécuter l'analyse LDA avec la sélection de variables
+res.lda <- lda(formula = formula, data = iris, prior = c(1, 1, 1) / 3, subset = ind.train)
+respredict <- predict(res.lda, iris[-ind.train, ])
+respredict
+
+#QUESTION 5
