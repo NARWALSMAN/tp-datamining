@@ -6,6 +6,7 @@
 library(class)
 library(MASS)
 library(klaR)
+library(caret)
 data_iris<-iris
 
 #QUESTION 1  Decrire comment fonctionne cette procedure
@@ -278,3 +279,35 @@ respredict <- predict(res.lda, iris[-ind.train, ])
 respredict
 
 #QUESTION 5
+# Fonction pour effectuer l'étude de rééchantillonnage avec LDA
+effectuer_reechantillonnage_lda <- function(data, n_splits) {
+  resultats <- list()  # Pour stocker les résultats
+  
+  for (i in 1:n_splits) {
+    # Diviser les données
+    set.seed(i)  # Assurer la reproductibilité
+    indices <- createDataPartition(data$Species, p = 0.7, list = FALSE)
+    formation <- data[indices, ]
+    test <- data[-indices, ]
+    
+    # Appliquer LDA
+    modele_lda <- lda(Species ~ ., data = formation)
+    predictions <- predict(modele_lda, test)$class
+    
+    # Calculer le taux d'erreur et la précision
+    matrice_confusion <- table(predictions, test$Species)
+    taux_erreur <- 1 - sum(diag(matrice_confusion)) / sum(matrice_confusion)
+    precision <- diag(matrice_confusion) / rowSums(matrice_confusion)
+    
+    # Stocker les résultats
+    resultats[[i]] <- list(taux_erreur = taux_erreur, precision = precision)
+  }
+  
+  return(resultats)
+}
+
+# Exécuter l'étude de rééchantillonnage
+resultats_reechantillonnage_lda <- effectuer_reechantillonnage_lda(data_iris, n_splits = 500)
+resultats_reechantillonnage_lda
+
+#QUESTION 6
