@@ -305,9 +305,9 @@ effectuer_reechantillonnage_lda <- function(data, n_splits) {
   
   return(resultats)
 }
-
+#QUESTION 6
 # Exécuter l'étude de rééchantillonnage
 resultats_reechantillonnage_lda <- effectuer_reechantillonnage_lda(data_iris, n_splits = 500)
 resultats_reechantillonnage_lda
 
-#QUESTION 6
+#QUESTION 7
