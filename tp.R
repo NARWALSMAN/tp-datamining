@@ -309,5 +309,75 @@ effectuer_reechantillonnage_lda <- function(data, n_splits) {
 # Exécuter l'étude de rééchantillonnage
 resultats_reechantillonnage_lda <- effectuer_reechantillonnage_lda(data_iris, n_splits = 500)
 resultats_reechantillonnage_lda
+# Extraction des taux d'erreurs à partir des résultats
+taux_erreurs <- sapply(resultats_reechantillonnage_lda, function(x) x$taux_erreur)
+
+# Extraction des précisions pour chaque classe (setosa, virginica, versicolor)
+# en supposant que l'ordre des classes est le même pour toutes les précisions
+precisions <- do.call(rbind, lapply(resultats_reechantillonnage_lda, function(x) x$precision))
+precisions_setosa <- precisions[, "setosa"]
+precisions_virginica <- precisions[, "virginica"]
+precisions_versicolor <- precisions[, "versicolor"]
+
+# Configuration de l'espace de tracé pour afficher trois graphiques côte à côte
+par(mfrow = c(1, 4))
+
+# Tracé du boxplot pour les taux d'erreurs
+boxplot(taux_erreurs, main = "Taux d'Erreurs", ylab = "Taux d'Erreur")
+
+# Tracé des boxplots pour les précisions de chaque classe
+boxplot(precisions_setosa, main = "Précision Setosa", ylab = "Précision")
+boxplot(precisions_virginica, main = "Précision Virginica", ylab = "Précision")
+boxplot(precisions_versicolor, main = "Précision Versicolor", ylab = "Précision")
+
+# Restaurer la configuration par défaut de l'espace de tracé
+par(mfrow = c(1, 1))
 
 #QUESTION 7
+selection_results <- resultats_reechantillonnage_lda
+# Créer une matrice pour stocker les résultats
+var_names <- unique(unlist(selection_results))  # Toutes les variables uniques
+selection_matrix <- matrix(0, nrow = length(var_names), ncol = length(var_names))
+rownames(selection_matrix) <- var_names
+
+# Remplir la matrice avec les occurrences
+for (selection in selection_results) {
+  for (i in seq_along(selection)) {
+    variable <- selection[i]
+    selection_matrix[variable, i] <- selection_matrix[variable, i] + 1
+  }
+}
+
+# Créer le tableau de contingence
+contingency_table <- as.table(selection_matrix)
+
+# Afficher le tableau3
+print(contingency_table)
+
+#ARBRE QUESTION 1
+# Load necessary libraries
+library(rpart)
+library(rpart.plot)
+
+# Prepare the data
+data(iris)
+X <- iris[, 1:4]   # Selecting the features
+y <- iris[, 5]     # Selecting the target variable
+
+# Splitting the data into training and test sets
+# First 25 observations of each species for training
+ind.train <- c(1:25, 51:75, 101:125)
+X.train <- X[ind.train, ]
+y.train <- y[ind.train]
+
+# Create a data frame for training
+dat.train <- data.frame(cbind(X.train, y.train = y.train))
+
+# Building the decision tree
+arbre <- rpart(y.train ~ ., data = dat.train)
+
+# Print the tree structure
+print(arbre)
+
+# Visualizing the tree
+rpart.plot(arbre)
