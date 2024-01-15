@@ -334,24 +334,46 @@ boxplot(precisions_versicolor, main = "Précision Versicolor", ylab = "Précisio
 par(mfrow = c(1, 1))
 
 #QUESTION 7
-selection_results <- resultats_reechantillonnage_lda
+# selection_results <- resultats_reechantillonnage_lda
+# # Créer une matrice pour stocker les résultats
+# var_names <- unique(unlist(selection_results))  # Toutes les variables uniques
+# selection_matrix <- matrix(0, nrow = length(var_names), ncol = length(var_names))
+# rownames(selection_matrix) <- var_names
+# 
+# # Remplir la matrice avec les occurrences
+# for (selection in selection_results) {
+#   for (i in seq_along(selection)) {
+#     variable <- selection[i]
+#     selection_matrix[variable, i] <- selection_matrix[variable, i] + 1
+#   }
+# }
+# 
+# # Créer le tableau de contingence
+# contingency_table <- as.table(selection_matrix)
+# 
+# # Afficher le tableau3
+# print(contingency_table)
+# #########################################################################
 # Créer une matrice pour stocker les résultats
 var_names <- unique(unlist(selection_results))  # Toutes les variables uniques
-selection_matrix <- matrix(0, nrow = length(var_names), ncol = length(var_names))
+selection_matrix <- matrix(0, nrow = length(var_names), ncol = length(selection_results))
 rownames(selection_matrix) <- var_names
 
 # Remplir la matrice avec les occurrences
-for (selection in selection_results) {
-  for (i in seq_along(selection)) {
-    variable <- selection[i]
-    selection_matrix[variable, i] <- selection_matrix[variable, i] + 1
+for (i in seq_along(selection_results)) {
+  selection <- selection_results[[i]]
+  for (variable in selection) {
+    # S'assurer que 'variable' est un seul élément
+    if (length(variable) == 1 && variable %in% rownames(selection_matrix)) {
+      selection_matrix[variable, i] <- selection_matrix[variable, i] + 1
+    }
   }
 }
 
 # Créer le tableau de contingence
 contingency_table <- as.table(selection_matrix)
 
-# Afficher le tableau3
+# Afficher le tableau
 print(contingency_table)
 
 #ARBRE QUESTION 1
@@ -381,3 +403,101 @@ print(arbre)
 
 # Visualizing the tree
 rpart.plot(arbre)
+
+#pre elagage
+# Calculer le cp directement
+cptable <- arbre_pre_elagage$cptable
+cpopti_line <- which.min(cptable[, "xerror"] + cptable[, "xstd"])
+cpopti <- cptable[cpopti_line, "CP"]
+
+# Vérifier que cpopti est valide
+if (is.na(cpopti)) {
+  stop("Impossible de déterminer un CP optimal.")
+}
+
+# Élagage de l'arbre avec le CP optimal
+arbre_post_elagage <- prune(arbre_pre_elagage, cp = cpopti)
+
+# Visualiser l'arbre post-élagué
+rpart.plot(arbre_post_elagage)
+
+
+#post elagage
+# Calculer l'indice de la ligne avec le xerror minimum augmenté de xstd
+cpopti_line <- which.min(arbre_pre_elagage$cptable[, "xerror"] + arbre_pre_elagage$cptable[, "xstd"])
+cpopti <- arbre_pre_elagage$cptable[cpopti_line, "CP"]
+
+# Vérifier que cpopti est valide
+if (is.na(cpopti)) {
+  stop("Impossible de déterminer un CP optimal.")
+}
+
+# Élagage de l'arbre avec le CP optimal
+arbre_post_elagage <- prune(arbre_pre_elagage, cp = cpopti)
+
+# Visualiser l'arbre post-élagué
+rpart.plot(arbre_post_elagage)
+
+#prediction avec rpart
+# Préparation de l'échantillon de test
+ind.test <- setdiff(1:nrow(iris), ind.train)
+X.test <- iris[ind.test, 1:4]
+y.test <- iris[ind.test, 5]
+
+# Prédiction avec l'arbre par défaut
+predictions_default <- predict(arbre, X.test, type = "class")
+
+# Prédiction avec l'arbre pré-élagué
+predictions_pre_elagage <- predict(arbre_pre_elagage, X.test, type = "class")
+
+# Prédiction avec l'arbre post-élagué
+predictions_post_elagage <- predict(arbre_post_elagage, X.test, type = "class")
+
+# Évaluer les performances
+table(y.test, predictions_default)
+table(y.test, predictions_pre_elagage)
+table(y.test, predictions_post_elagage)
+
+#score d'importance
+# Scores d'importance pour chaque arbre
+importance_default <- arbre$variable.importance
+importance_pre_elagage <- arbre_pre_elagage$variable.importance
+importance_post_elagage <- arbre_post_elagage$variable.importance
+
+# Afficher les scores
+print(importance_default)
+print(importance_pre_elagage)
+print(importance_post_elagage)
+
+#étude de réechantillonage
+etude_reechantillonnage <- function(N) {
+  resultats <- list()
+  for (i in 1:N) {
+    set.seed(i)
+    ind.train <- sample(1:nrow(iris), size = floor(0.7 * nrow(iris)))
+    y.train <- iris[ind.train, 5]
+    X.train <- iris[ind.train, 1:4]
+    dat.train <- data.frame(X.train, y.train)
+    
+    arbre <- rpart(y.train ~ ., data=dat.train, control=control_params)
+    
+    ind.test <- setdiff(1:nrow(iris), ind.train)
+    X.test <- iris[ind.test, 1:4]
+    y.test <- iris[ind.test, 5]
+    predictions <- predict(arbre, X.test, type = "class")
+    
+    matrice_confusion <- table(y.test, predictions)
+    taux_erreur <- 1 - sum(diag(matrice_confusion)) / sum(matrice_confusion)
+    precision <- diag(matrice_confusion) / rowSums(matrice_confusion)
+    
+    resultats[[i]] <- list(taux_erreur = taux_erreur, precision = precision, cp = arbre$cp)
+  }
+  return(resultats)
+}
+
+# Exécuter l'étude de rééchantillonnage
+N <- 500
+resultats_reechantillonnage <- etude_reechantillonnage(N)
+
+# Analyser les résultats (à compléter selon votre analyse)
+
