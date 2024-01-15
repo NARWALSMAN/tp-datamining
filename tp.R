@@ -499,5 +499,4 @@ etude_reechantillonnage <- function(N) {
 N <- 500
 resultats_reechantillonnage <- etude_reechantillonnage(N)
 
-# Analyser les résultats (à compléter selon votre analyse)
 
